@@ -19,15 +19,15 @@ namespace BaslerViewer
 
     public partial class Form1 : Form
     {
-        SerialPort com7;
-        String data;
-        baslerCamcs camera;
-        baslerCamcs camera2;
+        SerialPort com7;//扫描枪com口的声明
+        String data;//存放扫描器接受的条码
+        baslerCamcs camera;//左相机
+        baslerCamcs camera2;//右相机
         Bitmap saveBitmap1;
         Bitmap saveBitmap2;
-        int cam1Times = 1;
-        int cam2Times = 1;
-        int w1,h1,w2,h2;
+        int cam1Times = 1;//左摄像头图像初始展示比例
+        int cam2Times = 1;//右摄像头图像初始展示比例
+        int w1,h1,w2,h2;//分别为左相机图像的初始Width，height 右边相机图像的初始Width，Heigh
         
                        
         public Form1()
@@ -35,24 +35,22 @@ namespace BaslerViewer
 
             InitializeComponent();
             try
-            {             
+            {   //项目要求设定为第7个com口，
                 com7 = new SerialPort("COM7");
-                com7.BaudRate = 9600;
-                com7.Parity = Parity.None;
-                com7.StopBits = StopBits.One;
-                com7.Handshake = Handshake.None;
-                com7.DataBits = 8;
-                //com7.RtsEnable = true;
-                //com7.DtrEnable = true;
+                com7.BaudRate = 9600;//波特率
+                com7.Parity = Parity.None;//奇偶校验位
+                com7.StopBits = StopBits.One;//停止位
+                com7.Handshake = Handshake.None;//握手协议
+                com7.DataBits = 8;//数据位
                 com7.Open();
                 com7.DiscardInBuffer();               
-                camera = new baslerCamcs("22547782");
-                camera2 = new baslerCamcs("23061596");
+                camera = new baslerCamcs("********");//第一个摄像头的PID
+                camera2 = new baslerCamcs("********");//第二个摄像头的PID
                 camera.CameraImageEvent += Camera_CameraImageEvent;
                 camera2.CameraImageEvent += Camera_CameraImageEvent2;
                 LogOutput(DateTime.Now + ": 扫描枪设备初始化成功,摄像头初始化成功");
                 WriteLog.WriteRunLog(DateTime.Now+": 扫描枪设备初始化成功,摄像头初始化成功");
-                com7.DataReceived += new SerialDataReceivedEventHandler(Com_DataReceived);
+                com7.DataReceived += new SerialDataReceivedEventHandler(Com_DataReceived); //com口接收信息的事件
                 
             }
             catch (Exception ex) 
@@ -89,7 +87,8 @@ namespace BaslerViewer
         {
             But_Enter.Enabled = false;        
         }
-
+ 
+        ///条码枪的数据和相机核对无误后保存相机图像
         private void button1_Click(object sender, EventArgs e)
         {                       
             try
@@ -120,6 +119,7 @@ namespace BaslerViewer
             
         }
 
+        ///项目要求，需要屏蔽空格键
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (msg.Msg == 0x0100 && keyData == Keys.Space)
@@ -166,7 +166,7 @@ namespace BaslerViewer
             {
                 if (com7.IsOpen)
                 {
-                    data = com7.ReadExisting();
+                    data = com7.ReadExisting();//接收数据
                     this.BeginInvoke(new System.Threading.ThreadStart(delegate()
                     {
                         Label_ShowBarcode.Text = data.Trim();
@@ -239,6 +239,7 @@ namespace BaslerViewer
            
         }
 
+        ///实时日志
         public void LogOutput(string str) 
         {
             richTextBox1.AppendText(str);
@@ -251,6 +252,7 @@ namespace BaslerViewer
             richTextBox1.Focus();
         }
 
+        ///左相机选择放大比例展示实时画面
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             cam1Times = Convert.ToInt16(comboBox1.Text);
@@ -286,6 +288,7 @@ namespace BaslerViewer
             }
         }
 
+        ///右相机选择放大比例展示实时画面
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             cam2Times = Convert.ToInt16(comboBox2.Text);
